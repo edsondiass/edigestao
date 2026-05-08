@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ediGestão">
+<title>ediGestão</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; color: #1a1a2e; }
+  .header {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  }
+  .header h1 { font-size: 20px; font-weight: 700; }
+  .header span { font-size: 11px; opacity: 0.7; display: block; }
+
+  .page { display: none; padding: 16px; }
+  .page.active { display: block; }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .card-title { font-size: 13px; color: #718096; margin-bottom: 4px; }
+  .card-value { font-size: 24px; font-weight: 700; color: #1a1a2e; }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .alerta-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-left: 4px solid #e94560;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .alerta-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .alerta-card p { font-size: 13px; color: #718096; margin-bottom: 8px; }
+  .progress-bar {
+    background: #e2e8f0;
+    border-radius: 10px;
+    height: 8px;
+    margin: 8px 0;
+  }
+  .progress-fill {
+    background: linear-gradient(90deg, #e94560, #f6ad55);
+    border-radius: 10px;
+    height: 8px;
+    transition: width 0.5s;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: #e94560; color: white; }
+  .btn-success { background: #38a169; color: white; }
+  .btn-danger  { background: #e53e3e; color: white; }
+  .btn-outline { background: transparent; border: 2px solid #e94560; color: #e94560; }
+  .btn-full    { width: 100%; display: block; text-align: center; margin-top: 8px; }
+
+  .list-item {
+    background: white;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .list-item-info h3 { font-size: 15px; font-weight: 700; }
+  .list-item-info p  { font-size: 12px; color: #718096; margin-top: 2px; }
+  .badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+  .badge-green  { background: #c6f6d5; color: #276749; }
+  .badge-yellow { background: #fefcbf; color: #744210; }
+
+  .form-group { margin-bottom: 14px; }
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 5px;
+  }
+  .form-group input, .form-group select {
+    width: 100%;
+    padding: 11px 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1a1a2e;
+    background: white;
+    transition: border 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: #e94560;
+  }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 200;
+    justify-content: center;
+    align-items: flex-end;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 20px 20px 0 0;
+    padding: 24px 20px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #1a1a2e;
+  }
+  .modal-close {
+    float: right;
+    background: #f0f4f8;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: -4px;
+  }
+
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 12px;
+    margin-top: 4px;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f4f8;
+    font-size: 14px;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { color: #718096; }
+  .detail-value { font-weight: 600; }
+
+  .renovacao-box {
+    background: linear-gradient(135deg, #fff5f5, #fff);
+    border: 2px solid #e94560;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 12px;
+  }
+  .renovacao-box h3 { color: #e94560; font-size: 15px; margin-bottom: 12px; }
+  .troco-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #38a169;
+    text-align: center;
+    margin: 8px 0;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1a2e;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    z-index: 300;
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+
+  .fab {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #e94560;
+    color: white;
+    font-size: 28px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(233,69,96,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 98;
+  }
+
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: #16213e;
+    display: flex;
+    border-top: 1px solid #0f3460;
+    z-index: 100;
+  }
+  .bottom-nav button {
+    flex: 1;
+    padding: 12px 0 8px;
+    background: none;
+    border: none;
+    color: #a0aec0;
+    font-size: 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    transition: color 0.2s;
+  }
+  .bottom-nav button.active { color: #e94560; }
+  .bottom-nav button span:first-child { font-size: 22px; }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #a0aec0;
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  body { padding-bottom: 70px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>ediGestão</h1>
+    <span>Gestão de Empréstimos</span>
+  </div>
+  <div style="font-size:24px">💼</div>
+</div>
+
+<div id="page-painel" class="page active">
+  <div id="painel-content">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">👥 Total de Clientes</div>
+        <div class="card-value">0</div>
+      </div>
+      <div class="card">
+        <div class="card-title">💰 Empréstimos Ativos</div>
+        <div class="card-value">0</div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🔔 Alertas de Renovação</div>
+        <div class="card-value" style="color:#e94560">0</div>
+      </div>
+      <div class="card">
+        <div class="card-title">💵 Total Emprestado</div>
+        <div class="card-value" style="font-size:18px">R$ 0,00</div>
+      </div>
+    </div>
+
+    <div class="section-title">🔔 Alertas de Renovação</div>
+    <p style="color:#a0aec0;font-size:13px">Nenhum alerta no momento.</p>
+
+    <div style="margin-top:8px;display:flex;gap:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="showPage('clientes');abrirModalCliente()">+ Cliente</button>
+      <button class="btn btn-success" style="flex:1" onclick="showPage('emprestimos');abrirModalEmprestimo()">+ Empréstimo</button>
+    </div>
+  </div>
+</div>
+
+<div id="page-clientes" class="page">
+  <div id="clientes-content"></div>
+</div>
+
+<div id="page-emprestimos" class="page">
+  <div id="emprestimos-content"></div>
+</div>
+
+<div class="bottom-nav">
+  <button onclick="showPage('painel')" id="nav-painel" class="active">
+    <span>📊</span><span>Painel</span>
+  </button>
+  <button onclick="showPage('clientes')" id="nav-clientes">
+    <span>👥</span><span>Clientes</span>
+  </button>
+  <button onclick="showPage('emprestimos')" id="nav-emprestimos">
+    <span>💰</span><span>Empréstimos</span>
+  </button>
+</div>
+
+<button class="fab" id="fab-btn" onclick="fabAction()">+</button>
+
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal">
+    <h2>
+      <button class="modal-close" onclick="closeModal('modal-cliente')">✕</button>
+      Novo Cliente
+    </h2>
+    <div class="form-group">
+      <label>Nome Completo *</label>
+      <input type="text" id="cli-nome" placeholder="Nome do cliente">
+    </div>
+    <div class="form-group">
+      <label>CPF</label>
+      <input type="text" id="cli-cpf" placeholder="000.000.000-00" maxlength="14">
+    </div>
+    <div class="form-group">
+      <label>Telefone / WhatsApp</label>
+      <input type="tel" id="cli-tel" placeholder="(00) 00000-0000">
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="cli-email" placeholder="email@exemplo.com">
+    </div>
+    <div class="form-group">
+      <label>Endereço</label>
+      <input type="text" id="cli-end" placeholder="Rua, número, bairro">
+    </div>
+    <div class="form-group">
+      <label>Observações</label>
+      <input type="text" id="cli-obs" placeholder="Anotações sobre o cliente">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="salvarCliente()">Salvar Cliente</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-emprestimo">
+  <div class="modal">
+    <h2>
+      <button class="modal-close" onclick="closeModal('modal-emprestimo')">✕</button>
+      Novo Empréstimo
+    </h2>
+    <div class="form-group">
+      <label>Cliente *</label>
+      <select id="emp-cliente">
+        <option value="">Selecione um cliente</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Valor Emprestado (R$) *</label>
+      <input type="number" id="emp-valor" placeholder="0,00" step="0.01">
+    </div>
+    <div class="form-group">
+      <label>Número de Parcelas *</label>
+      <input type="number" id="emp-parcelas" placeholder="Ex: 12" min="1">
+    </div>
+    <div class="form-group">
+      <label>Valor de Cada Parcela (R$) *</label>
+      <input type="number" id="emp-valor-parcela" placeholder="0,00" step="0.01">
+    </div>
+    <div class="form-group">
+      <label>Data do Empréstimo *</label>
+      <input type="date" id="emp-data">
+    </div>
+    <div class="form-group">
+      <label>Observações</label>
+      <input type="text" id="emp-obs" placeholder="Detalhes adicionais">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="salvarEmprestimo()">Salvar Empréstimo</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-detalhe-cliente">
+  <div class="modal" id="modal-detalhe-cliente-content"></div>
+</div>
+
+<div class="modal-overlay" id="modal-detalhe-emp">
+  <div class="modal" id="modal-detalhe-emp-content"></div>
+</div>
+
+<div class="modal-overlay" id="modal-renovacao">
+  <div class="modal" id="modal-renovacao-content"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let dados = JSON.parse(localStorage.getItem('edigestao') || '{"clientes":[],"emprestimos":[]}');
+
+function salvarDados() {
+  localStorage.setItem('edigestao', JSON.stringify(dados));
+}
+
+function gerarId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('nav-' + page).classList.add('active');
+
+  if (page === 'painel') renderPainel();
+  if (page === 'clientes') renderClientes();
+  if (page === 'emprestimos') renderEmprestimos();
+}
+
+function fabAction() {
+  const page = document.querySelector('.page.active').id.replace('page-', '');
+  if (page === 'clientes' || page === 'painel') abrirModalCliente();
+  if (page === 'emprestimos') abrirModalEmprestimo();
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+function abrirModalCliente(dados_edit = null) {
+  document.getElementById('cli-nome').value  = dados_edit?.nome  || '';
+  document.getElementById('cli-cpf').value   = dados_edit?.cpf   || '';
+  document.getElementById('cli-tel').value   = dados_edit?.tel   || '';
+  document.getElementById('cli-email').value = dados_edit?.email || '';
+  document.getElementById('cli-end').value   = dados_edit?.end   || '';
+  document.getElementById('cli-obs').value   = dados_edit?.obs   || '';
+  openModal('modal-cliente');
+}
+
+function abrirModalEmprestimo() {
+  const sel = document.getElementById('emp-cliente');
+  sel.innerHTML = '<option value="">Selecione um cliente</option>';
+  dados.clientes.forEach(c => {
+    sel.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
+  });
+  document.getElementById('emp-valor').value         = '';
+  document.getElementById('emp-parcelas').value      = '';
+  document.getElementById('emp-valor-parcela').value = '';
+  document.getElementById('emp-data').value          = new Date().toISOString().split('T')[0];
+  document.getElementById('emp-obs').value           = '';
+  openModal('modal-emprestimo');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function salvarCliente() {
+  const nome = document.getElementById('cli-nome').value.trim();
+  if (!nome) { showToast('⚠️ Informe o nome do cliente'); return; }
+
+  const cliente = {
+    id: gerarId(),
+    nome,
+    cpf:   document.getElementById('cli-cpf').value,
+    tel:   document.getElementById('cli-tel').value,
+    email: document.getElementById('cli-email').value,
+    end:   document.getElementById('cli-end').value,
+    obs:   document.getElementById('cli-obs').value,
+    criado: new Date().toLocaleDateString('pt-BR')
+  };
+
+  dados.clientes.push(cliente);
+  salvarDados();
+  closeModal('modal-cliente');
+  showToast('✅ Cliente cadastrado!');
+  renderClientes();
+}
+
+function excluirCliente(id) {
+  if (!confirm('Excluir este cliente?')) return;
+  dados.clientes    = dados.clientes.filter(c => c.id !== id);
+  dados.emprestimos = dados.emprestimos.filter(e => e.clienteId !== id);
+  salvarDados();
+  closeModal('modal-detalhe-cliente');
+  showToast('🗑️ Cliente removido');
+  renderClientes();
+}
+
+function renderClientes() {
+  const el = document.getElementById('clientes-content');
+
+  if (dados.clientes.length === 0) {
+    el.innerHTML = `
+      <div class="section-title">👥 Clientes</div>
+      <div class="empty-state">
+        <div class="icon">👤</div>
+        <p>Nenhum cliente cadastrado ainda.<br>Toque no + para adicionar.</p>
+      </div>`;
+    return;
+  }
+
+  let html = `<div class="section-title">👥 Clientes (${dados.clientes.length})</div>`;
+
+  dados.clientes.forEach(c => {
+    const emps = dados.emprestimos.filter(e => e.clienteId === c.id && e.status === 'ativo');
+    html += `
+      <div class="list-item" onclick="verCliente('${c.id}')">
+        <div class="list-item-info">
+          <h3>${c.nome}</h3>
+          <p>${c.tel || 'Sem telefone'} · ${emps.length} empréstimo(s) ativo(s)</p>
+        </div>
+        <span class="badge ${emps.length > 0 ? 'badge-green' : 'badge-yellow'}">
+          ${emps.length > 0 ? 'Ativo' : 'Sem emp.'}
+        </span>
+      </div>`;
+  });
+
+  el.innerHTML = html;
+}
+
+function verCliente(id) {
+  const c = dados.clientes.find(x => x.id === id);
+  if (!c) return;
+  const emps = dados.emprestimos.filter(e => e.clienteId === id);
+
+  let empsHtml = '';
+  emps.forEach(e => {
+    const pct = Math.round((e.pagas / e.parcelas) * 100);
+    empsHtml += `
+      <div style="background:#f0f4f8;border-radius:8px;padding:12px;margin-top:8px;cursor:pointer"
+           onclick="closeModal('modal-detalhe-cliente');verEmprestimo('${e.id}')">
+        <div style="display:flex;justify-content:space-between">
+          <strong>R$ ${formatMoney(e.valor)}</strong>
+          <span class="badge ${e.status === 'ativo' ? 'badge-green' : 'badge-yellow'}">${e.status}</span>
+        </div>
+        <p style="font-size:12px;color:#718096;margin-top:4px">${e.pagas}/${e.parcelas} parcelas · ${pct}%</p>
+      </div>`;
+  });
+
+  document.getElementById('modal-detalhe-cliente-content').innerHTML = `
+    <h2>
+      <button class="modal-close" onclick="closeModal('modal-detalhe-cliente')">✕</button>
+      ${c.nome}
+    </h2>
+    <div class="detail-row"><span class="detail-label">CPF</span><span class="detail-value">${c.cpf || '—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Telefone</span><span class="detail-value">${c.tel || '—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${c.email || '—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Endereço</span><span class="detail-value">${c.end || '—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Cadastrado em</span><span class="detail-value">${c.criado}</span></div>
+    ${c.obs ? `<div class="detail-row"><span class="detail-label">Obs</span><span class="detail-value">${c.obs}</span></div>` : ''}
+    <div class="section-title" style="margin-top:16px">Empréstimos</div>
+    ${emps.length === 0 ? '<p style="color:#a0aec0;font-size:13px">Nenhum empréstimo.</p>' : empsHtml}
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-danger" style="flex:1" onclick="excluirCliente('${c.id}')">🗑️ Excluir</button>
+      <button class="btn btn-success" style="flex:1" onclick="closeModal('modal-detalhe-cliente');abrirModalEmprestimo()">+ Empréstimo</button>
+    </div>
+  `;
+  openModal('modal-detalhe-cliente');
+}
+
+function salvarEmprestimo() {
+  const clienteId    = document.getElementById('emp-cliente').value;
+  const valor        = parseFloat(document.getElementById('emp-valor').value);
+  const parcelas     = parseInt(document.getElementById('emp-parcelas').value);
+  const valorParcela = parseFloat(document.getElementById('emp-valor-parcela').value);
+  const data         = document.getElementById('emp-data').value;
+
+  if (!clienteId)                  { showToast('⚠️ Selecione um cliente'); return; }
+  if (!valor || valor <= 0)        { showToast('⚠️ Informe o valor'); return; }
+  if (!parcelas || parcelas <= 0)  { showToast('⚠️ Informe as parcelas'); return; }
+  if (!valorParcela || valorParcela <= 0) { showToast('⚠️ Informe o valor da parcela'); return; }
+
+  const emp = {
+    id: gerarId(),
+    clienteId,
+    valor,
+    parcelas,
+    valorParcela,
+    pagas: 0,
+    data: data || new Date().toISOString().split('T')[0],
+    obs: document.getElementById('emp-obs').value,
+    status: 'ativo',
+    criado: new Date().toLocaleDateString('pt-BR')
+  };
+
+  dados.emprestimos.push(emp);
+  salvarDados();
+  closeModal('modal-emprestimo');
+  showToast('✅ Empréstimo cadastrado!');
+  renderEmprestimos();
+}
+
+function pagarParcela(id) {
+  const emp = dados.emprestimos.find(e => e.id === id);
+  if (!emp) return;
+  if (emp.pagas >= emp.parcelas) { showToast('✅ Empréstimo já quitado!'); return; }
+  emp.pagas += 1;
+  if (emp.pagas >= emp.parcelas) emp.status = 'quitado';
+  salvarDados();
+  verEmprestimo(id);
+  showToast('✅ Parcela registrada!');
+  renderPainel();
+}
+
+function excluirEmprestimo(id) {
+  if (!confirm('Excluir este empréstimo?')) return;
+  dados.emprestimos = dados.emprestimos.filter(e => e.id !== id);
+  salvarDados();
+  closeModal('modal-detalhe-emp');
+  showToast('🗑️ Empréstimo removido');
+  renderEmprestimos();
+  renderPainel();
+}
+
+function renderEmprestimos() {
+  const el      = document.getElementById('emprestimos-content');
+  const ativos  = dados.emprestimos.filter(e => e.status === 'ativo');
+  const quitado = dados.emprestimos.filter(e => e.status === 'quitado');
+
+  if (dados.emprestimos.length === 0) {
+    el.innerHTML = `
+      <div class="section-title">💰 Empréstimos</div>
+      <div class="empty-state">
+        <div class="icon">💸</div>
+        <p>Nenhum empréstimo cadastrado.<br>Toque no + para adicionar.</p>
+      </div>`;
+    return;
+  }
+
+  let html = `<div class="section-title">💰 Ativos (${ativos.length})</div>`;
+
+  ativos.forEach(e => {
+    const cli  = dados.clientes.find(c => c.id === e.clienteId);
+    const pct  = Math.round((e.pagas / e.parcelas) * 100);
+    const saldo = calcSaldo(e);
+    const elegivel = pct >= 30;
+
+    html += `
+      <div class="list-item" onclick="verEmprestimo('${e.id}')" style="flex-direction:column;align-items:flex-start">
+        <div style="display:flex;justify-content:space-between;width:100%;margin-bottom:8px">
+          <div>
+            <h3>${cli?.nome || 'Cliente'}</h3>
+            <p>R$ ${formatMoney(e.valor)} · ${e.parcelas} parcelas</p>
+          </div>
+          ${elegivel ? '<span class="badge badge-yellow">🔔 Renovar</span>' : '<span class="badge badge-green">Em dia</span>'}
+        </div>
+        <div class="progress-bar" style="width:100%">
+          <div class="progress-fill" style="width:${pct}%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;width:100%;margin-top:4px">
+          <span style="font-size:12px;color:#718096">${e.pagas}/${e.parcelas} parcelas (${pct}%)</span>
+          <span style="font-size:12px;color:#e94560;font-weight:600">Saldo: R$ ${formatMoney(saldo)}</span>
+        </div>
+      </div>`;
+  });
+
+  if (quitado.length > 0) {
+    html += `<div class="section-title" style="margin-top:16px">✅ Quitados (${quitado.length})</div>`;
+    quitado.forEach(e => {
+      const cli = dados.clientes.find(c => c.id === e.clienteId);
+      html += `
+        <div class="list-item" onclick="verEmprestimo('${e.id}')">
+          <div class="list-item-info">
+            <h3>${cli?.nome || 'Cliente'}</h3>
+            <p>R$ ${formatMoney(e.valor)} · ${e.parcelas} parcelas</p>
+          </div>
+          <span class="badge badge-green">Quitado</span>
+        </div>`;
+    });
+  }
+
+  el.innerHTML = html;
+}
+
+function verEmprestimo(id) {
+  const e = dados.emprestimos.find(x => x.id === id);
+  if (!e) return;
+  const cli   = dados.clientes.find(c => c.id === e.clienteId);
+  const pct   = Math.round((e.pagas / e.parcelas) * 100);
+  const saldo = calcSaldo(e);
+  const elegivel = pct >= 30 && e.status === 'ativo';
+
+  let renovacaoHtml = '';
+  if (elegivel) {
+    renovacaoHtml = `
+      <div class="renovacao-box">
+        <h3>🔔 Elegível para Renovação!</h3>
+        <p style="font-size:13px;color:#718096;margin-bottom:12px">
+          Já pagou ${pct}% das parcelas. Pode renovar e levar troco!
+        </p>
+        <button class="btn btn-primary btn-full" onclick="abrirRenovacao('${id}')">
+          💰 Simular Renovação
+        </button>
+      </div>`;
+  }
+
+  let pagarBtn = e.status === 'ativo' && e.pagas < e.parcelas
+    ? `<button class="btn btn-success btn-full" onclick="pagarParcela('${id}')">✅ Registrar Parcela Paga</button>`
+    : '';
+
+  document.getElementById('modal-detalhe-emp-content').innerHTML = `
+    <h2>
+      <button class="modal-close" onclick="closeModal('modal-detalhe-emp')">✕</button>
+      Empréstimo
+    </h2>
+    <div class="detail-row"><span class="detail-label">Cliente</span><span class="detail-value">${cli?.nome || '—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Valor</span><span class="detail-value">R$ ${formatMoney(e.valor)}</span></div>
+    <div class="detail-row"><span class="detail-label">Parcelas</span><span class="detail-value">${e.parcelas}x de R$ ${formatMoney(e.valorParcela)}</span></div>
+    <div class="detail-row"><span class="detail-label">Pagas</span><span class="detail-value">${e.pagas} parcelas (${pct}%)</span></div>
+    <div class="detail-row"><span class="detail-label">Restantes</span><span class="detail-value">${e.parcelas - e.pagas} parcelas</span></div>
+    <div class="detail-row"><span class="detail-label">Saldo Devedor</span><span class="detail-value" style="color:#e94560">R$ ${formatMoney(saldo)}</span></div>
+    <div class="detail-row"><span class="detail-label">Data</span><span class="detail-value">${formatDate(e.data)}</span></div>
+    <div class="detail-row"><span class="detail-label">Status</span>
+      <span class="badge ${e.status === 'ativo' ? 'badge-green' : 'badge-yellow'}">${e.status}</span>
+    </div>
+    ${e.obs ? `<div class="detail-row"><span class="detail-label">Obs</span><span class="detail-value">${e.obs}</span></div>` : ''}
+    <div class="progress-bar" style="margin:12px 0">
+      <div class="progress-fill" style="width:${pct}%"></div>
+    </div>
+    ${renovacaoHtml}
+    ${pagarBtn}
+    <button class="btn btn-danger btn-full" style="margin-top:8px" onclick="excluirEmprestimo('${id}')">🗑️ Excluir Empréstimo</button>
+  `;
+  openModal('modal-detalhe-emp');
+}
+
+function abrirRenovacao(empId) {
+  const e   = dados.emprestimos.find(x => x.id === empId);
+  const cli = dados.clientes.find(c => c.id === e.clienteId);
+  const saldo = calcSaldo(e);
+
+  document.getElementById('modal-renovacao-content').innerHTML = `
+    <h2>
+      <button class="modal-close" onclick="closeModal('modal-renovacao')">✕</button>
+      💰 Simular Renovação
+    </h2>
+    <p style="font-size:13px;color:#718096;margin-bottom:16px">Cliente: <strong>${cli?.nome}</strong></p>
+    <div class="detail-row">
+      <span class="detail-label">Saldo devedor atual</span>
+      <span class="detail-value" style="color:#e94560">R$ ${formatMoney(saldo)}</span>
+    </div>
+    <div class="form-group" style="margin-top:16px">
+      <label>Valor do Novo Empréstimo (R$)</label>
+      <input type="number" id="ren-valor" placeholder="0,00" step="0.01"
+             oninput="calcTroco(${saldo}, '${empId}')">
+    </div>
+    <div class="form-group">
+      <label>Número de Parcelas</label>
+      <input type="number" id="ren-parcelas" placeholder="Ex: 12" min="1">
+    </div>
+    <div class="form-group">
+      <label>Valor de Cada Parcela (R$)</label>
+      <input type="number" id="ren-valor-parcela" placeholder="0,00" step="0.01">
+    </div>
+    <div id="troco-resultado" style="display:none">
+      <div class="renovacao-box" style="text-align:center">
+        <p style="font-size:13px;color:#718096">Troco para o cliente</p>
+        <div class="troco-value" id="troco-val"></div>
+        <p id="troco-msg" style="font-size:12px;color:#718096"></p>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:12px"
+            onclick="confirmarRenovacao('${empId}')">
+      ✅ Confirmar Renovação
+    </button>
+  `;
+  openModal('modal-renovacao');
+}
+
+function calcTroco(saldo, empId) {
+  const novoValor = parseFloat(document.getElementById('ren-valor').value) || 0;
+  const troco     = novoValor - saldo;
+  const box  = document.getElementById('troco-resultado');
+  const tval = document.getElementById('troco-val');
+  const tmsg = document.getElementById('troco-msg');
+
+  if (novoValor > 0) {
+    box.style.display = 'block';
+    if (troco > 0) {
+      tval.textContent = 'R$ ' + formatMoney(troco);
+      tval.style.color = '#38a169';
+      tmsg.textContent = 'O cliente quita o saldo e ainda leva R$ ' + formatMoney(troco) + ' de troco!';
+    } else if (troco === 0) {
+      tval.textContent = 'R$ 0,00';
+      tval.style.color = '#718096';
+      tmsg.textContent = 'Novo empréstimo apenas quita o saldo atual.';
+    } else {
+      tval.textContent = 'R$ ' + formatMoney(Math.abs(troco));
+      tval.style.color = '#e94560';
+      tmsg.textContent = '⚠️ Valor insuficiente para quitar o saldo. Faltam R$ ' + formatMoney(Math.abs(troco));
+    }
+  } else {
+    box.style.display = 'none';
+  }
+}
+
+function confirmarRenovacao(empIdAntigo) {
+  const novoValor        = parseFloat(document.getElementById('ren-valor').value);
+  const novaParcelas     = parseInt(document.getElementById('ren-parcelas').value);
+  const novaValorParcela = parseFloat(document.getElementById('ren-valor-parcela').value);
+  const empAntigo        = dados.emprestimos.find(e => e.id === empIdAntigo);
+  const saldo            = calcSaldo(empAntigo);
+
+  if (!novoValor || novoValor <= 0)           { showToast('⚠️ Informe o valor'); return; }
+  if (!novaParcelas || novaParcelas <= 0)     { showToast('⚠️ Informe as parcelas'); return; }
+  if (!novaValorParcela || novaValorParcela <= 0) { showToast('⚠️ Informe o valor da parcela'); return; }
+  if (novoValor <= saldo)                     { showToast('⚠️ Valor deve ser maior que o saldo devedor'); return; }
+
+  empAntigo.status = 'renovado';
+  empAntigo.pagas  = empAntigo.parcelas;
+
+  const novoEmp = {
+    id: gerarId(),
+    clienteId: empAntigo.clienteId,
+    valor: novoValor,
+    parcelas: novaParcelas,
+    valorParcela: novaValorParcela,
+    pagas: 0,
+    data: new Date().toISOString().split('T')[0],
+    obs: `Renovação do empréstimo anterior. Troco: R$ ${formatMoney(novoValor - saldo)}`,
+    status: 'ativo',
+    criado: new Date().toLocaleDateString('pt-BR')
+  };
+  dados.emprestimos.push(novoEmp);
+  salvarDados();
+
+  closeModal('modal-renovacao');
+  closeModal('modal-detalhe-emp');
+  showToast('✅ Renovação realizada! Troco: R$ ' + formatMoney(novoValor - saldo));
+  renderEmprestimos();
+  renderPainel();
+}
+
+function renderPainel() {
+  const totalClientes   = dados.clientes.length;
+  const ativos          = dados.emprestimos.filter(e => e.status === 'ativo');
+  const totalEmprestado = ativos.reduce((s, e) => s + e.valor, 0);
+  const alertas         = ativos.filter(e => (e.pagas / e.parcelas) * 100 >= 30);
+
+  let alertasHtml = '';
+  if (alertas.length === 0) {
+    alertasHtml = '<p style="color:#a0aec0;font-size:13px">Nenhum alerta no momento.</p>';
+  } else {
+    alertas.forEach(e => {
+      const cli  = dados.clientes.find(c => c.id === e.clienteId);
+      const pct  = Math.round((e.pagas / e.parcelas) * 100);
+      const saldo = calcSaldo(e);
+      alertasHtml += `
+        <div class="alerta-card">
+          <h3>${cli?.nome || 'Cliente'}</h3>
+          <p>${e.pagas}/${e.parcelas} parcelas pagas (${pct}%)</p>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:${pct}%"></div>
+          </div>
+          <p>Saldo devedor: <strong>R$ ${formatMoney(saldo)}</strong></p>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-outline" style="flex:1;font-size:12px" onclick="verEmprestimo('${e.id}')">Ver detalhes</button>
+            <button class="btn btn-primary" style="flex:1;font-size:12px" onclick="abrirRenovacao('${e.id}')">Renovar</button>
+          </div>
+        </div>`;
+    });
+  }
+
+  document.getElementById('painel-content').innerHTML = `
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">👥 Total de Clientes</div>
+        <div class="card-value">${totalClientes}</div>
+      </div>
+      <div class="card">
+        <div class="card-title">💰 Empréstimos Ativos</div>
+        <div class="card-value">${ativos.length}</div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🔔 Alertas de Renovação</div>
+        <div class="card-value" style="color:#e94560">${alertas.length}</div>
+      </div>
+      <div class="card">
+        <div class="card-title">💵 Total Emprestado</div>
+        <div class="card-value" style="font-size:18px">R$ ${formatMoney(totalEmprestado)}</div>
+      </div>
+    </div>
+
+    <div class="section-title">🔔 Alertas de Renovação</div>
+    ${alertasHtml}
+
+    <div style="margin-top:8px;display:flex;gap:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="showPage('clientes');abrirModalCliente()">+ Cliente</button>
+      <button class="btn btn-success" style="flex:1" onclick="showPage('emprestimos');abrirModalEmprestimo()">+ Empréstimo</button>
+    </div>
+  `;
+}
+
+function formatMoney(v) {
+  return (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  const [y, m, dia] = d.split('-');
+  return `${dia}/${m}/${y}`;
+}
+
+function calcSaldo(e) {
+  const restantes = e.parcelas - e.pagas;
+  return restantes * e.valorParcela;
+}
+
+renderPainel();
+</script>
+
+</body>
+</html>
